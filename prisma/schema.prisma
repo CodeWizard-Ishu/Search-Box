@@ -3,7 +3,156 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL)
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  firstName     String
+  lastName      String?
+  email         String         @unique
+  password      String
+  isMentor      Boolean
+  isActive      Boolean
+  menteeProfile MenteeProfile? @relation("UserMenteeProfile")
+  mentorProfile MentorProfile? @relation("UserMentorProfile")
+  resetTokens   ResetToken[]   @relation("UserResetToken")
+}
+
+model ResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation("UserResetToken", fields: [userId], references: [id])
+
+  @@index([token])
+}
+
+model MentorProfile {
+  id                  Int                  @id @default(autoincrement())
+  userId              Int                  @unique
+  bio                 String?
+  profilePicture      String?
+  phoneNumber         String?
+  experience          String?
+  rating              Float                @default(0)
+  linkedin            String?
+  twitter             String?
+  instagram           String?
+  totalEarnings       Float                @default(0)
+  totalBookings       Int                  @default(0)
+  uniqueMentees       Int                  @default(0)
+  availability        Availability[]
+  bookings            Booking[]
+  calendarConnections CalendarConnection[]
+  user                User                 @relation("UserMentorProfile", fields: [userId], references: [id])
+  ratings             Rating[]
+  domains             Domain[]             @relation("MentorDomains")
+  services            Service[]            @relation("MentorServices")
+}
+
+model MenteeProfile {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @unique
+  goals          String?
+  phoneNumber    String?
+  profilePicture String?
+  linkedin       String?
+  twitter        String?
+  instagram      String?
+  bookings       Booking[]
+  user           User      @relation("UserMenteeProfile", fields: [userId], references: [id])
+  ratings        Rating[]
+}
+
+model Service {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float           @default(0)
+  mentorId    Int?
+  mentor      MentorProfile[] @relation("MentorServices")
+}
+
+model Booking {
+  id                 Int           @id @default(autoincrement())
+  mentorId           Int
+  menteeId           Int
+  dateTime           DateTime      @db.Timestamptz(6)
+  duration           Int
+  payment            Float
+  status             BookingStatus
+  serviceName        String
+  serviceDescription String?
+  servicePrice       Float
+  meetLink           String?
+  mentee             MenteeProfile @relation(fields: [menteeId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  mentor             MentorProfile @relation(fields: [mentorId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model CalendarConnection {
+  id           Int           @id @default(autoincrement())
+  mentorId     Int
+  provider     String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime
+  email        String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  mentor       MentorProfile @relation(fields: [mentorId], references: [userId])
+
+  @@unique([mentorId, provider])
+  @@index([mentorId])
+}
+
+model Domain {
+  id      Int             @id @default(autoincrement())
+  name    String          @unique
+  mentors MentorProfile[] @relation("MentorDomains")
+}
+
+model Rating {
+  id        Int           @id @default(autoincrement())
+  mentorId  Int
+  menteeId  Int
+  score     Int
+  feedback  String?
+  createdAt DateTime      @default(now())
+  mentee    MenteeProfile @relation(fields: [menteeId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  mentor    MentorProfile @relation(fields: [mentorId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([mentorId])
+  @@index([menteeId])
+}
+
+model Availability {
+  id        Int           @id @default(autoincrement())
+  mentorId  Int
+  dayOfWeek DayOfWeek
+  startTime DateTime      @db.Timestamptz(6)
+  endTime   DateTime      @db.Timestamptz(6)
+  enabled   Boolean       @default(true)
+  mentor    MentorProfile @relation(fields: [mentorId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELED
 }

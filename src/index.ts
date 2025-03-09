@@ -1,23 +1,27 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import router from "./routes/routes";
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Basic route
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to the server!' });
+app.get("/", (req, res) => {
+  res.json({
+    message: "Welcome to the server!",
+    health: "100%",
+    state: "running",
+  });
 });
 
-// Start server
+app.use("/", router);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
