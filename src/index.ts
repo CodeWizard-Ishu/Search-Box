@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+app.use(cors({ origin: "https://mentg.in", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
