@@ -134,7 +134,7 @@ async function fetchMentorsByKeywords(keywords: string[]): Promise<Mentor[]> {
       user: true,
       domains: true,
     },
-    take: 6,
+    take: 10,
     orderBy : {
       rating : "desc"
     },
